@@ -16,8 +16,14 @@ svg{width:100%;height:285px;display:block}.badge{display:inline-block;background
 </head><body><main>
 <div class="title">🌱 孩子成長日記</div><div class="sub">WHO 2007 成長參考 × 自己的成長軌跡</div>
 <div class="tabs"><button class="tab active" data-p="恩大">👦 大哥・恩大</button><button class="tab" data-p="叡弟">👦 小弟・叡弟</button></div>
-<div class="card"><div class="muted" id="age"></div><div><span class="big" id="cur">—</span> cm</div><div id="pct" class="badge">尚無量測</div>
-<div class="stats"><div class="stat"><span class="muted">比上次</span><b id="gain">—</b></div><div class="stat"><span class="muted">相隔</span><b id="days">—</b></div><div class="stat"><span class="muted">紀錄</span><b id="count">0 次</b></div></div></div>
+<div class="card">
+<div class="muted" id="age"></div>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;">
+  <div><span class="big" id="cur">—</span> cm</div>
+  <div style="text-align:right;"><span style="font-size:26px;font-weight:800;" id="cur-w">—</span> kg</div>
+</div>
+<div id="pct" class="badge">尚無量測</div>
+<div class="stats"><div class="stat"><span class="muted">身高比上次</span><b id="gain">—</b></div><div class="stat"><span class="muted">相隔</span><b id="days">—</b></div><div class="stat"><span class="muted">紀錄</span><b id="count">0 次</b></div></div></div>
 <div class="card"><div class="section">📈 WHO 身高／年齡曲線</div><div class="hint">灰階參考線＝WHO 2007；紫色點＝孩子實際量測</div><svg id="chart" viewBox="0 0 700 300"></svg></div>
 <div class="card"><div class="section">＋ 新增量測</div><form id="form">
 <div class="field"><label>日期</label><input id="date" type="date" required></div><div class="field"><label>身高（cm）</label><input id="height" type="number" min="50" max="220" step=".1" required></div>
@@ -80,7 +86,7 @@ function render(){
   let a=db[person];
   $("count").textContent=a.length+" 次";
   if(!a.length){
-    $("cur").textContent="—";$("pct").textContent="尚無量測";$("gain").textContent="—";$("days").textContent="—";
+    $("cur").textContent="—";$("cur-w").textContent="—";$("pct").textContent="尚無量測";$("gain").textContent="—";$("days").textContent="—";
     $("age").textContent="生日："+CHILD[person].birth;
     $("records").innerHTML="";$("empty").style.display="block";
     draw([]);return;
@@ -88,6 +94,7 @@ function render(){
   $("empty").style.display="none";
   let l=a.at(-1),p=a.at(-2),m=ageMonths(CHILD[person].birth,l.date),r=ref(m),z=(l.height-r[1])/r[2];
   $("cur").textContent=l.height.toFixed(1);
+  $("cur-w").textContent=l.weight!==null&&l.weight!==undefined&&!isNaN(l.weight)?l.weight.toFixed(1)+" kg":"— kg";
   $("age").textContent="量測時 "+ageText(m)+"　｜　出生 "+CHILD[person].birth;
   $("pct").textContent=pct(z);
   $("gain").textContent=p?((l.height-p.height>=0?"+":"")+(l.height-p.height).toFixed(1)+" cm"):"—";
@@ -95,7 +102,8 @@ function render(){
   
   $("records").innerHTML=a.slice().reverse().map((x,ri)=>{
     let i=a.length-1-ri,q=i?a[i-1]:null,g=q?x.height-q.height:null,mm=ageMonths(CHILD[person].birth,x.date),rr=ref(mm),zz=(x.height-rr[1])/rr[2];
-    return `<div class="record"><div><div class="rdate">${x.date.replaceAll("-","/")}｜${ageText(mm)}</div><span class="rh">${x.height.toFixed(1)} cm</span>${g!==null?`<span class="gain">${g>=0?"+":""}${g.toFixed(1)} cm</span>`:""}<span class="muted">　${pct(zz)}</span>${x.note?`<div class="muted">${x.note.replace(/[&<>]/g,"")}</div>`:""}</div><button class="del" data-i="${i}">刪除</button></div>`;
+    let weightStr = x.weight!==null&&x.weight!==undefined&&!isNaN(x.weight) ? `　｜　${x.weight.toFixed(1)} kg` : "";
+    return `<div class="record"><div><div class="rdate">${x.date.replaceAll("-","/")}｜${ageText(mm)}</div><span class="rh">${x.height.toFixed(1)} cm</span>${weightStr}${g!==null?`<span class="gain">${g>=0?"+":""}${g.toFixed(1)} cm</span>`:""}<span class="muted"><br>${pct(zz)}</span>${x.note?`<div class="muted">${x.note.replace(/[&<>]/g,"")}</div>`:""}</div><button class="del" data-i="${i}">刪除</button></div>`;
   }).join("");
 
   document.querySelectorAll(".del").forEach(b=>b.onclick=()=>{
